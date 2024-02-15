@@ -1,46 +1,55 @@
 "use client";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import "./page.module.css";
 import Nav from "@/component/Navbar";
 import { taskDef } from "@/component/types";
-import { saveTasksToLocal, getTaskFromLocal } from "@/component";
-import axios from "axios";
+import axios from "@/component/api";
 import Spinner from "@/component/Spinner";
 
 
 
 export default function Home() {
-  const [tasks, setTasks] = useState<taskDef[]>([])
+  const [tasks, setTasks] = useState<taskDef[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const deleteTask = (i:number)=>{
-  // if(tasks[i].scheduled) return alert("You cannot delete this task");
-  // let tasks2 = Object.assign([], tasks);
-  // tasks2.splice(i,1);
-  // setTasks(tasks2);
-  // saveTasksToLocal(tasks2);
-  }
-
-  const scheduledTask = (i: number) => {
-    // let tasks2: taskDef[] = Object.assign([], tasks);
-    // tasks2[i].scheduled = !tasks2[i].scheduled;
-    // setTasks(tasks2);
-    // saveTasksToLocal(tasks2);
+  const deleteTask = async (task: taskDef) => {
+    setLoading(true);
+    if(task.scheduled){
+      alert(`This task ${task.title} cannot be deleted`);
+      setLoading(false);
+      return
+    }
+    try {
+      await axios.delete(`/tasks/${task._uuid}`);
+      const res = await axios.get("/tasks");
+      setTasks(res.data.items);
+      setLoading(false);
+    } catch (error) {
+      console.log("Error deleting task:", error);
+    }
   };
 
-  useEffect(()=>{
-   (async () => {
-      setLoading(true)
-      const res = await axios.get(
-        "https://crudcrud.com/api/8864861aca83475a82865ac299a7c9a1/task"
-      );
-      setTasks(res.data);
-      setLoading(false)
+  const scheduledTask = async (task: taskDef) => {
+    setLoading(true);
+    let task2 = Object.assign({}, task);
+    task2.scheduled = !task2.scheduled;
+    delete task2._uuid;
+    await axios.put(`/tasks/${task._uuid}`,task2);
+    let res = await axios.get(`/tasks`);
+    setTasks(res.data.items);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const res = await axios.get("/tasks");
+      setTasks(res.data.items);
+      setLoading(false);
       // console.log(res.data)
     })();
-  },[])
+  }, []);
 
   return (
     <main>
@@ -54,15 +63,14 @@ export default function Home() {
                <div className="sub-title">{task.detail}</div>
              </div>
              <div className="todo-bar-right-section">
-                <Link href={`/EditTask/${task._id}`} ><img src="./icons/pen.svg" /></Link>
-               <img src="./icons/delet.svg" onClick={()=>deleteTask(task._id)}  />
-               <img src="./icons/checkcircle.svg"   onClick={()=>scheduledTask(task._id)} className={task.scheduled ? "scheduled" : ""}/>
+                <Link href={`/EditTask/${task._uuid}`} ><img src="./icons/pen.svg" /></Link>
+               <img src="./icons/delet.svg" onClick={()=>deleteTask(task)}  />
+               <img src="./icons/checkcircle.svg"   onClick={()=>scheduledTask(task)} className={task.scheduled ? "scheduled" : ""}/>
              </div>
            </div>))}
            </div>}
            <div>
         <div className="add-todo-button">
-          {/* <Link href="/AddTask" className="button">+</Link> */}
           <Link href="/AddTask" className="button"><img src="/icons/plusicon.svg"/></Link>
         </div>
       </div>

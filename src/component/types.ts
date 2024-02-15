@@ -1,5 +1,5 @@
 export interface taskDef {
-  _id?: string;
+  _uuid?: string;
   title: string;
   detail: string;
   scheduled?: boolean;
