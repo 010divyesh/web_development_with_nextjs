@@ -5,7 +5,7 @@ import Form from "@/component/TaskForm";
 import { taskDef } from "@/component/types";
 import axios from "@/component/api";
 import Spinner from "@/component/Spinner";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 export default function AddTask() {
   const [loading, setLoading] = useState(false);
@@ -20,8 +20,7 @@ export default function AddTask() {
   return (
     <main>
       <Nav title="Add Task" backbtn={true} />
-      <Form submitBtnLable="ADD" onSave={save}/>
-      {loading && <Spinner/>}
+      { loading ? ( <Spinner/> ) : (<Form submitBtnLable="ADD" onSave={save}/>)}
     </main>
   );
 }
